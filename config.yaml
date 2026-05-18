@@ -1,0 +1,100 @@
+# Project configuration for the Mandarin T3 creak study.
+# Every parameter that might change lives here, not in code.
+
+paths:
+  # Point directly at the MagicData-RAMC release directory where
+  # SPKINFO.txt, UTTERANCEINFO.txt, WAV/, TXT/ live.
+  corpus_root: data/raw/MagicData-RAMC/MDT2021S003
+  interim_dir: data/interim
+  processed_dir: data/processed
+  results_dir: results
+
+# Which subset definition is active.
+# Switch to 'larger_run' when Colab access is available.
+active_subset: test_run
+
+subsets:
+  # Corpus reality: each speaker appears in exactly one dialogue file.
+  # n_speakers == n_files; total duration ≈ n_speakers × ~31 min/file.
+  # minutes_per_speaker removed — effective control is n_speakers only.
+  test_run:
+    target_hours: 3
+    speakers: 6 # 6M + 6F -> ~6.2 h
+  larger_run:
+    target_hours: 12
+    speakers: 24 # 12M + 12F -> ~12.4 h
+
+random_seed: 42
+
+# Tone sandhi: three levels kept separate, following Kuang (2017).
+sandhi_levels:
+  - T3_plain # T3 followed by T1, T2, or T4
+  - T3s # T3 followed by another T3 (sandhi context)
+  - T3_neutral # T3 followed by a neutral-tone syllable
+
+# Prosodic context: graded predictor, not categorical.
+prosody:
+  ipu_silence_threshold_ms: 200
+  break_metric: pause_duration_following_ms # continuous primary
+  break_bins_secondary: [0, 150, 300, 700, .inf] # B2–B5 analogue, plots only
+
+# Speaking rate (local window).
+rate:
+  window_sec: 2.0
+  metric: syllables_per_sec_local
+
+# Voice quality measures: minimal Keating (2023) recommended set,
+# plus intensity (free with parselmouth).
+voice_quality:
+  measures:
+    - F0
+    - H1_H2_corrected
+    - SHR
+    - HNR_0_500Hz
+    - CPP
+    - intensity_RMS
+  aggregation:
+    - syllable_mean
+    - rime_third_means # early / mid / late
+  frame_step_ms: 5
+
+# creapy and creak-type clustering.
+creak:
+  creapy_threshold: 0.5
+  rime_creaky_pct: 30 # rime is "creaky" if >=30% creaky frames
+  type_method: gmm
+  type_k_search: [2, 3, 4, 5]
+  type_k_selector: bic
+  type_feature_set:
+    - H1_H2_corrected
+    - SHR
+    - HNR_0_500Hz
+    - CPP
+    - F0_speaker_zscore
+    - F0_irregularity
+
+# Token-level exclusion criteria.
+exclusions:
+  min_rime_duration_ms: 50
+  drop_overlapping_speech: true
+  drop_laughter: true
+  drop_filled_pauses: true
+  alignment_phone_max_duration_ms: 500
+
+# Statistical analysis.
+stats:
+  engine: statsmodels
+  primary_outcome: pct_creaky_frames_per_rime # continuous, MixedLM
+  secondary_outcome: binary_creak # logistic, cluster-robust SE
+  fixed_effects:
+    - prosodic_position
+    - speaking_rate
+    - sandhi_context
+    - preceding_tone
+    - following_tone
+    - gender
+  random_effects:
+    by_speaker:
+      - intercept
+      - prosodic_position_slope
+      - speaking_rate_slope
