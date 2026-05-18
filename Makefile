@@ -62,6 +62,7 @@ $(TRANSCRIPTS): src/stage02_transcripts.py $(MANIFEST_SUBSET) $(CONFIG)
 
 transcripts: $(TRANSCRIPTS)
 
+# 3a
 
 $(INTERIM)/mfa_input: src/stage03a_mfa_prep.py $(MANIFEST_SUBSET) $(TRANSCRIPTS) $(CONFIG)
 	$(PYTHON) -m src.stage03a_mfa_prep \
@@ -73,6 +74,8 @@ $(INTERIM)/mfa_input: src/stage03a_mfa_prep.py $(MANIFEST_SUBSET) $(TRANSCRIPTS)
 
 mfa_prep: $(INTERIM)/mfa_input
 
+# 3b
+
 $(TEXTGRIDS): src/stage03b_parse_textgrids.py $(TRANSCRIPTS) $(MANIFEST_SUBSET) $(CONFIG)
 	$(PYTHON) -m src.stage03b_parse_textgrids \
 		--config $(CONFIG) \
@@ -83,6 +86,8 @@ $(TEXTGRIDS): src/stage03b_parse_textgrids.py $(TRANSCRIPTS) $(MANIFEST_SUBSET) 
 
 parse_textgrids: $(TEXTGRIDS)
 
+#
+
 $(T3_PROSODY): src/stage04_prosody.py $(TEXTGRIDS) $(CONFIG)
 	$(PYTHON) -m src.stage04_prosody \
 		--config $(CONFIG) \
@@ -91,27 +96,15 @@ $(T3_PROSODY): src/stage04_prosody.py $(TEXTGRIDS) $(CONFIG)
 
 prosody: $(T3_PROSODY)
 
-$(T3_ACOUSTIC): src/stage05_acoustic.py $(T3_PROSODY) $(CONFIG)
-	$(PYTHON) -m src.stage05_acoustic \
-		--config $(CONFIG) \
-		--input $(T3_PROSODY) \
-		--output $@
 
-acoustic: $(T3_ACOUSTIC)
 
 # ---------------------------------------------------------------------------
-# Stages 2–10 — placeholders, to be filled in subsequent iterations.
-# Listed here so the dependency graph is visible from the start.
-# ---------------------------------------------------------------------------
-# $(TRANSCRIPTS):    src/stage02_transcripts.py    + $(MANIFEST_SUBSET)
-# $(TEXTGRIDS):      src/stage03_align.py          + $(TRANSCRIPTS)
-# $(T3_SYLLABLES):   src/stage04_extract_t3.py     + $(TEXTGRIDS)
-# $(T3_PROSODY):     src/stage05_prosody.py        + $(T3_SYLLABLES)
-# $(T3_RATE):        src/stage06_rate.py           + $(T3_SYLLABLES)
-# $(T3_ACOUSTIC):    src/stage07_acoustic.py       + $(T3_SYLLABLES)
-# $(T3_CREAK):       src/stage08_creapy.py         + $(T3_SYLLABLES)
-# $(T3_CREAK_TYPE):  src/stage09_creak_types.py    + $(T3_ACOUSTIC) + $(T3_CREAK)
-# $(MASTER):         src/stage10_assemble.py       + all of the above
+# Stages 5 and after — placeholders, to be filled in subsequent iterations.
+#
+# $(T3_ACOUSTIC):    src/stage05_acoustic.py       + $(TEXTGRIDS)
+# $(T3_CREAK):       src/stage06_creapy.py         + $(TEXTGRIDS)
+# $(T3_CREAK_TYPE):  src/stage07_creak_types.py    + $(T3_ACOUSTIC) + $(T3_CREAK)
+# $(MASTER):         src/stage08_assemble.py       + all of the above
 
 # ---------------------------------------------------------------------------
 clean:

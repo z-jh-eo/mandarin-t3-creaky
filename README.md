@@ -1,32 +1,6 @@
-# Mandarin T3 Creak: Corpus Study
-
-A reproducible pipeline for studying creaky voice in Mandarin Tone 3
-across prosodic positions and speaking rates, on the MagicData-RAMC
-conversational corpus.
-
-## What this project does
-
-For each Tone 3 syllable in a balanced subset of MagicData-RAMC, we
-estimate:
-
-- **Continuous primary outcome:** percentage of creaky frames per
-  rime, detected by `creapy`.
-- **Secondary outcome:** binary creak (yes/no) and creak *type* via
-  unsupervised clustering on minimal acoustic measures.
-
-The predictors of interest are prosodic position (graded, via
-following-pause duration), local speaking rate, and tone-sandhi
-context (T3 plain / T3+T3 / T3 + neutral). Speaker gender, F0 range,
-and surrounding tones are controls.
-
-The pipeline is split into twelve stages (see `Makefile`), each
-producing a parquet artifact consumed by the next.
-
 ## Setup
 
 ### 1. Python environment
-
-Python 3.10 or 3.11 recommended.
 
 ```bash
 python -m venv .venv
@@ -36,15 +10,12 @@ pip install -r requirements.txt
 
 ### 2. Montreal Forced Aligner
 
-MFA is easiest to install via conda:
-
 ```bash
 conda install -c conda-forge montreal-forced-aligner
 mfa model download acoustic mandarin_mfa
 mfa model download dictionary mandarin_china_mfa
 ```
 
-(Skip until needed for Stage 3.)
 
 ### 3. creapy
 
@@ -52,10 +23,9 @@ mfa model download dictionary mandarin_china_mfa
 pip install git+https://github.com/dasl-/creapy.git
 ```
 
-(Skip until needed for Stage 8. Check the latest install instructions
-from the creapy repo — the package is occasionally renamed.)
-
 ### 4. Corpus
+
+The corpus is to be downloaded from : https://www.openslr.org/123/
 
 Download MagicData-RAMC and unpack into `data/raw/MagicData-RAMC/`.
 Then update `paths.corpus_root` in `config.yaml` to match the actual
@@ -68,13 +38,19 @@ make help               # list targets
 make setup              # create directory structure
 make ingest             # Stage 1a: scan corpus, build full manifest
 make subset             # Stage 1b: select balanced subset (6 h test_run)
+make transcripts        # Stage 2:  parse transcription and convert to pinyin
+make mfa_prep           # Stage 3a: prepare MFA input
+bash run_mfa_local.sh   # to run manually force alignment
+make parse_textgrids    # Stage 3b: parse textgrids given by MFA  
+make prosody            # Stage 4: assigns each T3 syll a prosodic pos
+# TODO
+# ...
 ```
 
-To switch to the larger run (12 h, useful when Colab access is
-available), edit `active_subset: larger_run` in `config.yaml` and
+To switch to the larger run,  edit `active_subset: larger_run` in `config.yaml` and
 rerun `make subset`.
 
-## Project layout
+## (Planed) Project layout
 
 ```
 .
